@@ -1,54 +1,25 @@
-import { useState } from "react";
+// pages/api/generate-image.js
+import { google } from "googleapis";
 
-export default function Home() {
-  const [prompt, setPrompt] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
-  const [loading, setLoading] = useState(false);
+export default async function handler(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
 
-  const generateImage = async () => {
-    if (!prompt) return alert("Please enter a prompt!");
-    setLoading(true);
+  const { prompt } = req.body;
+  if (!prompt) {
+    return res.status(400).json({ error: "Missing prompt" });
+  }
 
-    try {
-      const res = await fetch("/api/generate-image", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt }),
-      });
+  try {
+    console.log("Prompt received:", prompt);
 
-      const data = await res.json();
-      setImageUrl(data.imageUrl);
-    } catch (err) {
-      console.error(err);
-      alert("Failed to generate image.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div style={{ textAlign: "center", marginTop: "50px" }}>
-      <h1>Hello from my AI Image Generator!</h1>
-      <input
-        type="text"
-        value={prompt}
-        onChange={(e) => setPrompt(e.target.value)}
-        placeholder="Enter your prompt"
-        style={{ width: "300px", padding: "10px" }}
-      />
-      <br /><br />
-      <button onClick={generateImage} style={{ padding: "10px 20px" }}>
-        {loading ? "Generating..." : "Generate Image"}
-      </button>
-      <br /><br />
-      {imageUrl && (
-        <div>
-          <h3>Generated Image:</h3>
-          <img src={imageUrl} alt="AI Generated" style={{ maxWidth: "500px" }} />
-        </div>
-      )}
-    </div>
-  );
+    // Temporary placeholder — this will be replaced with real Gemini API call later.
+    return res.status(200).json({
+      imageUrl: "https://placehold.co/600x400?text=Generated+Image",
+    });
+  } catch (error) {
+    console.error("Error generating image:", error);
+    return res.status(500).json({ error: "Image generation failed" });
+  }
 }
-
-
