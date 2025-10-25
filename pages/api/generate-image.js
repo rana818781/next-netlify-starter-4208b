@@ -1,46 +1,54 @@
-import { google } from "googleapis";
+import { useState } from "react";
 
-export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ message: "Method not allowed" });
-  }
+export default function Home() {
+  const [prompt, setPrompt] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const { prompt } = req.body;
+  const generateImage = async () => {
+    if (!prompt) return alert("Please enter a prompt!");
+    setLoading(true);
 
-  try {
-    // Load credentials from Netlify environment variable
-    const credentials = JSON.parse(process.env.SERVICE_ACCOUNT_JSON);
+    try {
+      const res = await fetch("/api/generate-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt }),
+      });
 
-    // Authenticate using GoogleAuth
-    const auth = new google.auth.GoogleAuth({
-      credentials,
-      scopes: ["https://www.googleapis.com/auth/cloud-platform"],
-    });
+      const data = await res.json();
+      setImageUrl(data.imageUrl);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to generate image.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const client = await auth.getClient();
-    const accessToken = await client.getAccessToken();
-
-    // Call Gemini / Vertex AI REST API
-    const response = await fetch("https://generativeai.googleapis.com/v1beta2/images:generate", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${accessToken.token || accessToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "gemini-image-alpha-1",
-        prompt: prompt,
-        size: "1024x1024"
-      }),
-    });
-
-    const data = await response.json();
-
-    // Send back image URL
-    res.status(200).json({ imageUrl: data.url || "https://via.placeholder.com/512" });
-
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Failed to generate image" });
-  }
+  return (
+    <div style={{ textAlign: "center", marginTop: "50px" }}>
+      <h1>Hello from my AI Image Generator!</h1>
+      <input
+        type="text"
+        value={prompt}
+        onChange={(e) => setPrompt(e.target.value)}
+        placeholder="Enter your prompt"
+        style={{ width: "300px", padding: "10px" }}
+      />
+      <br /><br />
+      <button onClick={generateImage} style={{ padding: "10px 20px" }}>
+        {loading ? "Generating..." : "Generate Image"}
+      </button>
+      <br /><br />
+      {imageUrl && (
+        <div>
+          <h3>Generated Image:</h3>
+          <img src={imageUrl} alt="AI Generated" style={{ maxWidth: "500px" }} />
+        </div>
+      )}
+    </div>
+  );
 }
+
+
