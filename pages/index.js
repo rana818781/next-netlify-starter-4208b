@@ -11,6 +11,8 @@ export default function Home() {
       </Head>
 
       <main>
+        <h2>Hello from my AI Image Generator!</h2>
+
         <Header title="Welcome to my app!" />
         <p className="description">
           Get started by editing <code>pages/index.js</code>
